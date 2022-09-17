@@ -46,9 +46,6 @@ endif()
 # make sure to find python from conda, if a conda virtual env is activated
 set(Python3_FIND_VIRTUALENV "STANDARD")
 # Don't use FindPython here, pybind11 takes care of things much better
-#find_package(Python3 COMPONENTS Interpreter Development)
-#find_package(PythonInterp 3.6 REQUIRED)
-#find_package(PythonLibs 3.6 REQUIRED)
 
 # we also need extra stuff to make sure compile flags are correctly
 # passed to nvcc / host compiler

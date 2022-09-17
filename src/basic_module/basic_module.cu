@@ -40,10 +40,10 @@ template <typename Tv>
 void map_array(py::array_t<Tv, py::array::c_style | py::array::forcecast> vec,
                const py::buffer& scalar)
 {
-  auto ha = vec.request();
+  auto ha = vec.request(true);
   Tv sca;
   // Ahh, should find a better way to do this.
-  auto scalar_info = scalar.request(true);
+  auto scalar_info = scalar.request();
   if (scalar_info.format != py::format_descriptor<Tv>::format()){
       throw std::runtime_error("Unexpected scalar type: should be the same as vector's type.");
   }else {
@@ -85,7 +85,7 @@ void map_array(py::array_t<Tv, py::array::c_style | py::array::forcecast> vec,
   }
 }
 
-PYBIND11_MODULE(gpu_library, m)
+PYBIND11_MODULE(basic_module, m)
 {
   m.def("multiply_with_scalar", &map_array<double>);
   m.def("multiply_with_scalar", &map_array<float>);

@@ -14,19 +14,11 @@ Cuda
 
 Python 3.6 or greater
 
-Cmake >= 3.12 (for CUDA support and the new FindPython3 module)
+Cmake >= 3.18 (for CUDA support and the new FindPython3 module)
 
 # To build
 
-```bash
-mkdir build; cd build
-# provide a default cuda hardware architecture to build for
-export CUDAFLAGS="-arch=sm_50"
-cmake ..
-make
-```
-
-If you use cmake version >= 3.18, you can use [variable CMAKE_CUDA_ARCHITECTURES](https://cmake.org/cmake/help/latest/variable/CMAKE_CUDA_ARCHITECTURES.html) instead of CUDAFLAGS:
+You can use [variable CMAKE_CUDA_ARCHITECTURES](https://cmake.org/cmake/help/latest/variable/CMAKE_CUDA_ARCHITECTURES.html) instead of CUDAFLAGS:
 
 ```bash
 mkdir build; cd build
@@ -38,7 +30,7 @@ make
 Test it with
 ```python3 test_mul.py```
 
-_gpu_library.so_ and _test_mul.py_ must be in the same folder. Alternatively you can path to _gpu_library.so_ to your PYTHONPATH env variable.
+~~_gpu_library.so_ and _test_mul.py_ must be in the same folder. Alternatively you can path to _gpu_library.so_ to your PYTHONPATH env variable.~~
 
 # Features demonstrated
 
