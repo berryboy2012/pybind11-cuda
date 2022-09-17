@@ -1,5 +1,7 @@
 # pybind11-cuda
 
+>CMake+nvcc+msvc==pure_chaos. I learned it the hard way so you don't have to.
+
 Starting point for GPU accelerated python libraries
 
 Adapted from original work from https://github.com/PWhiddy/pybind11-cuda

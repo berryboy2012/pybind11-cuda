@@ -1,6 +1,7 @@
 # use cmake version >= 3.12 so that to benefit from
 # the new FindPython3 module
-cmake_minimum_required(VERSION 3.12)
+# cmake >= 3.18 for modern CUDA support
+cmake_minimum_required(VERSION 3.18)
 
 message("Using CMake version ${CMAKE_VERSION}")
 if(${CMAKE_VERSION} VERSION_LESS "3.18.0")
@@ -11,9 +12,9 @@ else()
     cmake_policy(SET CMP0104 NEW)
 endif()
 
-project(pybind11-cuda-test LANGUAGES CXX C)
+project(pybind11-cuda-test LANGUAGES CXX CUDA)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # custom cmake macros location
@@ -36,15 +37,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Cuda and Python configuration
 #-------------------------------------------------------------------#
 
-enable_language(CUDA)
+
 if(NOT DEFINED CMAKE_CUDA_STANDARD)
-  set(CMAKE_CUDA_STANDARD 11)
+  set(CMAKE_CUDA_STANDARD 17)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 endif()
 
 # make sure to find python from conda, if a conda virtual env is activated
 set(Python3_FIND_VIRTUALENV "STANDARD")
-find_package(Python3 COMPONENTS Interpreter Development)
+# Don't use FindPython here, pybind11 takes care of things much better
+#find_package(Python3 COMPONENTS Interpreter Development)
 #find_package(PythonInterp 3.6 REQUIRED)
 #find_package(PythonLibs 3.6 REQUIRED)
 
@@ -71,14 +73,9 @@ message("  C++ Compiler : ${CMAKE_CXX_COMPILER_ID} "
   "${CMAKE_CXX_COMPILER_VERSION} "
   "${CMAKE_CXX_COMPILER_WRAPPER}")
 message("    ${CMAKE_CXX_COMPILER}")
+message("  C++ Compiler flags : ${CMAKE_CXX_FLAGS}")
 message("  CUDA Compiler      : ${CMAKE_CUDA_COMPILER}")
 message("  CUDA Compiler exec : ${CUDA_NVCC_EXECUTABLE}")
 message("  CUDA Compile flags : ${CMAKE_CUDA_FLAGS}")
 message("  CUDA toolkit inc   : ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
-message("")
-message("  Python3_found       : ${Python3_FOUND}")
-message("  Python3 version     : ${Python3_VERSION}")
-message("  Python3 interpreter : ${Python3_EXECUTABLE}")
-message("  Python3 interp. Id  : ${Python3_INTERPRETER_ID}")
-message("  Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
-message("  Python3_LIBRARY_DIRS: ${Python3_LIBRARY_DIRS}")
+message("  CUDA arch targets  : ${CMAKE_CUDA_ARCHITECTURES}")

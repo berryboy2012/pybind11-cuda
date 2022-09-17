@@ -4,11 +4,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
-#include <cuda_runtime.h>
-
+namespace py=pybind11;
 template <typename T>
 __global__ void kernel
-(T *vec, T scalar, int num_elements)
+(T *vec, T scalar, size_t num_elements)
 {
   unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < num_elements) {
@@ -18,10 +17,10 @@ __global__ void kernel
 
 template <typename T>
 void run_kernel
-(T *vec, T scalar, int num_elements)
+(T *vec, T scalar, size_t num_elements)
 {
   dim3 dimBlock(256, 1, 1);
-  dim3 dimGrid(ceil((T)num_elements / dimBlock.x));
+  dim3 dimGrid((unsigned int)ceil((double)num_elements / dimBlock.x));
   
   kernel<T><<<dimGrid, dimBlock>>>
     (vec, scalar, num_elements);
@@ -37,34 +36,43 @@ void run_kernel
   }
 }
 
-template <typename T>
-void map_array(pybind11::array_t<T> vec, T scalar)
+template <typename Tv>
+void map_array(py::array_t<Tv, py::array::c_style | py::array::forcecast> vec,
+               const py::buffer& scalar)
 {
-  pybind11::buffer_info ha = vec.request();
+  auto ha = vec.request();
+  Tv sca;
+  // Ahh, should find a better way to do this.
+  auto scalar_info = scalar.request(true);
+  if (scalar_info.format != py::format_descriptor<Tv>::format()){
+      throw std::runtime_error("Unexpected scalar type: should be the same as vector's type.");
+  }else {
+      sca = *reinterpret_cast<Tv *>(scalar_info.ptr);
+  }
 
   if (ha.ndim != 1) {
     std::stringstream strstr;
-    strstr << "ha.ndim != 1" << std::endl;
-    strstr << "ha.ndim: " << ha.ndim << std::endl;
+    strstr << "vec.ndim != 1" << std::endl;
+    strstr << "vec.ndim: " << ha.ndim << std::endl;
     throw std::runtime_error(strstr.str());
   }
 
-  int size = ha.shape[0];
-  int size_bytes = size*sizeof(T);
-  T *gpu_ptr;
+  auto size = ha.shape[0];
+  auto size_bytes = size*sizeof(Tv);
+  Tv *gpu_ptr;
   cudaError_t error = cudaMalloc(&gpu_ptr, size_bytes);
 
   if (error != cudaSuccess) {
     throw std::runtime_error(cudaGetErrorString(error));
   }
 
-  T* ptr = reinterpret_cast<T*>(ha.ptr);
+  Tv* ptr = reinterpret_cast<Tv*>(ha.ptr);
   error = cudaMemcpy(gpu_ptr, ptr, size_bytes, cudaMemcpyHostToDevice);
   if (error != cudaSuccess) {
     throw std::runtime_error(cudaGetErrorString(error));
   }
 
-  run_kernel<T>(gpu_ptr, scalar, size);
+  run_kernel<Tv>(gpu_ptr, sca, size);
 
   error = cudaMemcpy(ptr, gpu_ptr, size_bytes, cudaMemcpyDeviceToHost);
   if (error != cudaSuccess) {
@@ -79,5 +87,6 @@ void map_array(pybind11::array_t<T> vec, T scalar)
 
 PYBIND11_MODULE(gpu_library, m)
 {
-  m.def("multiply_with_scalar", map_array<double>);
+  m.def("multiply_with_scalar", &map_array<double>);
+  m.def("multiply_with_scalar", &map_array<float>);
 }
