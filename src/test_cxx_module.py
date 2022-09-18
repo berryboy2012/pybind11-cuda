@@ -11,8 +11,8 @@ dtype = np.float32
 size = 10000000
 power = 4
 factor = 3.0
-arr1 = np.linspace(1.0,100.0, size, dtype=dtype)
-arr2 = np.linspace(1.0,100.0, size, dtype=dtype)
+arr1 = np.linspace(1.0, 100.0, size, dtype=dtype)
+arr2 = np.linspace(1.0, 100.0, size, dtype=dtype)
 
 factor = dtype(factor)
 
@@ -32,11 +32,11 @@ else:
 
 # thrust_demo
 import thrust_demo
-dtype = np.float64
-size = 10000000
+dtype = np.float32
+size = 100000
 rndarr = np.random.normal(size=size).astype(dtype)
-sum_diff = np.sum(rndarr)==thrust_demo.sum_array(rndarr)
-if sum_diff==0:
+sum_diff = np.sum(rndarr)-thrust_demo.sum_array(rndarr)
+if sum_diff == 0:
     print("thrust demo match")
 else:
-    print(f"thrust demo mismatch: {sum_diff}")
+    print(f"thrust demo mismatch: Diff. : {sum_diff}")

@@ -25,7 +25,7 @@ Tv sum_array(py::array_t<Tv, py::array::c_style | py::array::forcecast>& array)
     std::memcpy(h_vec.data(),array.data(),array.size()*sizeof(Tv));
     // Transfer to device and compute the sum.
     thrust::device_vector<Tv> d_vec = h_vec;
-    auto x = thrust::reduce(d_vec.begin(), d_vec.end(), 0, thrust::plus<Tv>());
+    auto x = thrust::reduce(d_vec.begin(), d_vec.end(), (Tv) 0, thrust::plus<Tv>());
     return x;
 
 }
