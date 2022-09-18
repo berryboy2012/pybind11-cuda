@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
-import basic_module
 import numpy as np
 import time
+
+# basic_module demo
+import basic_module
+
 
 dtype = np.float32
 size = 10000000
@@ -26,3 +29,14 @@ if not np.allclose(arr1,arr2):
     ))
 else:
     print("results match")
+
+# thrust_demo
+import thrust_demo
+dtype = np.float64
+size = 10000000
+rndarr = np.random.normal(size=size).astype(dtype)
+sum_diff = np.sum(rndarr)==thrust_demo.sum_array(rndarr)
+if sum_diff==0:
+    print("thrust demo match")
+else:
+    print(f"thrust demo mismatch: {sum_diff}")
