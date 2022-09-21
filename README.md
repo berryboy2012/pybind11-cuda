@@ -10,11 +10,11 @@ Present work uses [modern CMake/Cuda](https://developer.download.nvidia.com/vide
 
 # Prerequisites
 
-Cuda
+CUDA
 
 Python 3.6 or greater
 
-Cmake >= 3.18 (for CUDA support and the new FindPython3 module)
+CMake >= 3.18 (for CUDA support and the new FindPython3 module)
 
 # To build
 
@@ -28,14 +28,21 @@ make
 ```
 
 Test it with
-```python3 test_mul.py```
+```python3 ./src/test_cxx_module.py```
 
-~~_gpu_library.so_ and _test_mul.py_ must be in the same folder. Alternatively you can path to _gpu_library.so_ to your PYTHONPATH env variable.~~
 
 # Features demonstrated
 
-- Compiles out of the box with cmake
+- Compiles out of the box with cmake, even in Windows with `msvc`
+- Easy-to-modify demos with _modern c++ experience_ by using libs 
+such as `Thrust` and `cutlass`
 - Numpy integration
 - C++ Templating for composable kernels with generic data types
+
+# Caveats
+
+- The search order for `cuDNN` in `cutlass` is a bit surprising as of now (v2.10.0).
+It is recommended to copy your desired version of `cuDNN` into your current CUDA directory.
+And take notice on the detected path reported by `cutlass`'s `CMakeLists.txt`.
 
 Originally based on https://github.com/torstem/demo-cuda-pybind11

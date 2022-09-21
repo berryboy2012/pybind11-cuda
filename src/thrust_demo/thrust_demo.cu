@@ -1,3 +1,4 @@
+#pragma warning(push, 0)
 #include <sstream>
 #include <iostream>
 #include <cuda_runtime.h>
@@ -10,6 +11,7 @@
 #include <thrust/reduce.h>
 #include <thrust/functional.h>
 #include <thrust/random.h>
+#pragma warning(pop)
 
 namespace py=pybind11;
 
@@ -19,13 +21,13 @@ template <typename Tv>
 Tv sum_array(py::array_t<Tv, py::array::c_style | py::array::forcecast>& array)
 {
     // allocate std::vector (to pass to the C++ function)
-    thrust::host_vector<Tv> h_vec(array.size());
+    thrust::host_vector<Tv> h_vec((size_t) array.size());
 
     // copy py::array -> std::vector
     std::memcpy(h_vec.data(),array.data(),array.size()*sizeof(Tv));
     // Transfer to device and compute the sum.
     thrust::device_vector<Tv> d_vec = h_vec;
-    auto x = thrust::reduce(d_vec.begin(), d_vec.end(), (Tv) 0, thrust::plus<Tv>());
+    auto x = thrust::reduce(d_vec.begin(), d_vec.end(), static_cast<Tv>(0), thrust::plus<Tv>());
     return x;
 
 }

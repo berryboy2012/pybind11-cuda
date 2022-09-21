@@ -40,3 +40,22 @@ if sum_diff == 0:
     print("thrust demo match")
 else:
     print(f"thrust demo mismatch: Diff. : {sum_diff}")
+
+# thrust_demo
+import cutlass_demo
+dtype = np.float32
+size = 8192
+arrA = np.random.normal(size=(size, size)).astype(dtype)
+arrB = np.random.normal(size=(size, size)).astype(dtype)
+print("start cutlass")
+t0 = time.time()
+arrCutlass = cutlass_demo.matmul(arrA, arrB)
+print(f"gpu time: {time.time()-t0}")
+t0 = time.time()
+arrC = arrA@arrB
+print(f"cpu time: {time.time()-t0}")
+max_diff = np.max(np.abs(arrCutlass-arrC))
+if max_diff == 0:
+    print("cutlass demo match")
+else:
+    print(f"cutlass demo mismatch: Diff. : {max_diff}")
