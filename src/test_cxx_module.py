@@ -44,9 +44,9 @@ else:
 # thrust_demo
 import cutlass_demo
 dtype = np.float32
-size = 8192
-arrA = np.random.normal(size=(size, size)).astype(dtype)
-arrB = np.random.normal(size=(size, size)).astype(dtype)
+M, N, K = 1843, 1741, 927
+arrA = np.random.normal(size=(M, K)).astype(dtype)
+arrB = np.random.normal(size=(K, N)).astype(dtype)
 print("start cutlass")
 t0 = time.time()
 arrCutlass = cutlass_demo.matmul(arrA, arrB)

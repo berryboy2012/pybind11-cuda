@@ -80,13 +80,14 @@ cudaError_t CutlassSgemmNN(
     //
     // Launch the CUTLASS GEMM kernel.
     //
-    cutlass::Status status = gemm_operator(args);
+    auto status = gemm_operator(args);
 
     //
     // Return a cudaError_t if the CUTLASS GEMM operator returned an error code.
     //
 
     if (status != cutlass::Status::kSuccess) {
+        std::cerr<<cutlass::cutlassGetStatusString(status)<<std::endl;
         return cudaErrorUnknown;
     }
 
@@ -98,13 +99,13 @@ std::vector<float> CutlassGemm(int M, int N, int K,
                             thrust::host_vector<float> const vecA, thrust::host_vector<float> const vecB) {
 
     // Compute leading dimensions for each matrix.
-    int lda = M;
-    int ldb = K;
-    int ldc = M;
+    int lda = K;
+    int ldb = N;
+    int ldc = N;
 
     thrust::device_vector<float> matA = vecA;
     thrust::device_vector<float> matB = vecB;
-    thrust::device_vector<float> matC(ldc * N);
+    thrust::device_vector<float> matC(M*N);
 
 
     //
@@ -122,9 +123,8 @@ std::vector<float> CutlassGemm(int M, int N, int K,
                << cudaGetErrorString(result) << std::endl;
         throw std::runtime_error(strstr.str());
     }
-
     // Copy to host.
-    std::vector<float> host_cutlass(ldc * N, 0);
+    std::vector<float> host_cutlass(M*N, 0);
     thrust::copy(matC.begin(),matC.end(),host_cutlass.begin());
     return host_cutlass;
 }

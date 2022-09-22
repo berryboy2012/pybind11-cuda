@@ -32,7 +32,7 @@ void run_kernel
     strstr << "dimBlock: " << dimBlock.x << ", " << dimBlock.y << std::endl;
     strstr << "dimGrid: " << dimGrid.x << ", " << dimGrid.y << std::endl;
     strstr << cudaGetErrorString(error);
-    throw strstr.str();
+    throw std::runtime_error(strstr.str());
   }
 }
 
@@ -41,14 +41,8 @@ void map_array(py::array_t<Tv, py::array::c_style | py::array::forcecast> vec,
                const py::buffer& scalar)
 {
   auto ha = vec.request(true);
-  Tv sca;
-  // Ahh, should find a better way to do this.
   auto scalar_info = scalar.request();
-  if (scalar_info.format != py::format_descriptor<Tv>::format()){
-      throw std::runtime_error("Unexpected scalar type: should be the same as vector's type.");
-  }else {
-      sca = *reinterpret_cast<Tv *>(scalar_info.ptr);
-  }
+  auto sca = *static_cast<Tv *>(scalar_info.ptr);
 
   if (ha.ndim != 1) {
     std::stringstream strstr;
@@ -60,13 +54,14 @@ void map_array(py::array_t<Tv, py::array::c_style | py::array::forcecast> vec,
   auto size = ha.shape[0];
   auto size_bytes = size*sizeof(Tv);
   Tv *gpu_ptr;
+  // People with sane mind should use `thrust` to manipulate host/device memory instead
   cudaError_t error = cudaMalloc(&gpu_ptr, size_bytes);
 
   if (error != cudaSuccess) {
     throw std::runtime_error(cudaGetErrorString(error));
   }
 
-  Tv* ptr = reinterpret_cast<Tv*>(ha.ptr);
+  auto ptr = static_cast<Tv*>(ha.ptr);
   error = cudaMemcpy(gpu_ptr, ptr, size_bytes, cudaMemcpyHostToDevice);
   if (error != cudaSuccess) {
     throw std::runtime_error(cudaGetErrorString(error));
