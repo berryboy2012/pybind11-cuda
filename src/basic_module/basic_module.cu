@@ -37,31 +37,30 @@ void run_kernel
 }
 
 template <typename Tv>
-void map_array(py::array_t<Tv, py::array::c_style | py::array::forcecast> vec,
+void map_array(py::array_t<Tv, py::array::c_style | py::array::forcecast> &vec,
                const py::buffer& scalar)
 {
-  auto ha = vec.request(true);
+  auto vec_info = vec.request(true);
   auto scalar_info = scalar.request();
   auto sca = *static_cast<Tv *>(scalar_info.ptr);
 
-  if (ha.ndim != 1) {
+  if (vec_info.ndim != 1) {
     std::stringstream strstr;
     strstr << "vec.ndim != 1" << std::endl;
-    strstr << "vec.ndim: " << ha.ndim << std::endl;
+    strstr << "vec.ndim: " << vec_info.ndim << std::endl;
     throw std::runtime_error(strstr.str());
   }
 
-  auto size = ha.shape[0];
+  auto size = vec_info.shape[0];
   auto size_bytes = size*sizeof(Tv);
   Tv *gpu_ptr;
-  // People with sane mind should use `thrust` to manipulate host/device memory instead
   cudaError_t error = cudaMalloc(&gpu_ptr, size_bytes);
 
   if (error != cudaSuccess) {
     throw std::runtime_error(cudaGetErrorString(error));
   }
 
-  auto ptr = static_cast<Tv*>(ha.ptr);
+  auto ptr = static_cast<Tv*>(vec_info.ptr);
   error = cudaMemcpy(gpu_ptr, ptr, size_bytes, cudaMemcpyHostToDevice);
   if (error != cudaSuccess) {
     throw std::runtime_error(cudaGetErrorString(error));
