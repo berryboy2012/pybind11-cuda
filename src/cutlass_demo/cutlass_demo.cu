@@ -94,17 +94,16 @@ cudaError_t CutlassSgemmNN(
     // Return success, if no errors were encountered.
     return cudaSuccess;
 }
-std::vector<float> CutlassGemm(int M, int N, int K,
-                            float alpha, float beta,
-                            thrust::host_vector<float> const vecA, thrust::host_vector<float> const vecB) {
+thrust::device_vector<float> CutlassGemm(int M, int N, int K,
+                                         float alpha, float beta,
+                                         thrust::device_vector<float> const &matA,
+                                         thrust::device_vector<float> const &matB) {
 
     // Compute leading dimensions for each matrix.
     int lda = K;
     int ldb = N;
     int ldc = N;
 
-    thrust::device_vector<float> matA = vecA;
-    thrust::device_vector<float> matB = vecB;
     thrust::device_vector<float> matC(M*N);
 
 
@@ -123,10 +122,8 @@ std::vector<float> CutlassGemm(int M, int N, int K,
                << cudaGetErrorString(result) << std::endl;
         throw std::runtime_error(strstr.str());
     }
-    // Copy to host.
-    std::vector<float> host_cutlass(M*N, 0);
-    thrust::copy(matC.begin(),matC.end(),host_cutlass.begin());
-    return host_cutlass;
+
+    return matC;
 }
 namespace py = pybind11;
 
@@ -149,20 +146,21 @@ py::array_t<Tv> matmul(py::array_t<Tv, py::array::c_style | py::array::forcecast
     int M = arr_A_info.shape[0];
     int N = arr_B_info.shape[1];
     int K = arr_A_info.shape[1];
-    thrust::host_vector<Tv> matA((size_t) array_A.size());
-    //TODO: use std::copy instead
-    std::memcpy(matA.data(),array_A.data(),array_A.size()*sizeof(Tv));
-    thrust::host_vector<Tv> matB((size_t) array_B.size());
-    std::memcpy(matB.data(),array_B.data(),array_B.size()*sizeof(Tv));
+    thrust::device_vector<Tv> matA((size_t) array_A.size());
+    thrust::copy(array_A.data(),array_A.data()+array_A.size(),matA.begin());
+    thrust::device_vector<Tv> matB((size_t) array_B.size());
+    thrust::copy(array_B.data(),array_B.data()+array_B.size(),matB.begin());
     auto matC = CutlassGemm(M,N,K,1.0,0.0,matA,matB);
     auto result = py::array_t<Tv>(py::buffer_info(
-            matC.data(),//ptr
+            nullptr,//ptr
             sizeof(Tv),//sizeof(element)
             py::format_descriptor<Tv>::format(),//python type string
             2,//ndim
             {M, N},//shape
             {sizeof(Tv)*N, sizeof(Tv)}//stride for each dim
             ));
+    auto res_info = result.request(true);
+    thrust::copy(matC.begin(),matC.end(),static_cast<Tv*>(res_info.ptr));
     return result;
 }
 
