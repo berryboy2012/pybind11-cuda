@@ -20,10 +20,9 @@ namespace py=pybind11;
 template <typename Tv>
 Tv sum_array(py::array_t<Tv, py::array::c_style | py::array::forcecast>& array)
 {
-    thrust::host_vector<Tv> h_vec((size_t) array.size());
-    std::memcpy(h_vec.data(),array.data(),array.size()*sizeof(Tv));
     // Transfer to device and compute the sum.
-    thrust::device_vector<Tv> d_vec = h_vec;
+    auto d_vec = thrust::device_vector<Tv>((size_t) array.size());
+    thrust::copy(array.data(),array.data()+array.size(),d_vec.begin());
     auto x = thrust::reduce(d_vec.begin(), d_vec.end(), static_cast<Tv>(0), thrust::plus<Tv>());
     return x;
 
