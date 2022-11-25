@@ -134,21 +134,21 @@ namespace py = pybind11;
 template<typename Tv>
 py::array_t<Tv> matmul(py::array_t<Tv, py::array::c_style | py::array::forcecast> &array_A,
                        py::array_t<Tv, py::array::c_style | py::array::forcecast> &array_B) {
-    auto vec_A = array_A.request(false);
-    auto vec_B = array_B.request(false);
-    if ((vec_A.ndim != 2)|(vec_B.ndim != 2)){
+    auto arr_A_info = array_A.request(false);
+    auto arr_B_info = array_B.request(false);
+    if ((arr_A_info.ndim != 2) | (arr_B_info.ndim != 2)){
         std::stringstream strstr;
         strstr << "the number of dims of A or B is not 2" << std::endl;
         throw std::runtime_error(strstr.str());
     }
-    if (vec_A.shape[1]!=vec_B.shape[0]){
+    if (arr_A_info.shape[1] != arr_B_info.shape[0]){
         std::stringstream strstr;
         strstr << "incompatible shape between A and B" << std::endl;
         throw std::runtime_error(strstr.str());
     }
-    int M = vec_A.shape[0];
-    int N = vec_B.shape[1];
-    int K = vec_A.shape[1];
+    int M = arr_A_info.shape[0];
+    int N = arr_B_info.shape[1];
+    int K = arr_A_info.shape[1];
     thrust::host_vector<Tv> matA((size_t) array_A.size());
     //TODO: use std::copy instead
     std::memcpy(matA.data(),array_A.data(),array_A.size()*sizeof(Tv));
